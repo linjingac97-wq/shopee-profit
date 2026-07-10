@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>数据管理 - Shopee利润核算工具</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",Arial,sans-serif;background:#eef2f7;color:#111827}header{background:#111827;color:#fff;padding:18px 28px;position:relative}header h1{margin:0;font-size:22px}.sub{color:#cbd5e1;font-size:13px;margin-top:6px}main{max-width:1200px;margin:auto;padding:24px}.card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 8px 22px rgba(15,23,42,.08);margin-bottom:18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.upload{border:1px dashed #94a3b8;border-radius:12px;padding:18px;background:#f8fafc}label{display:block;font-weight:700;margin-bottom:8px}input[type=file]{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:9px;background:#fff}.notice,.ok,.warn{padding:12px;border-radius:10px;font-size:13px;line-height:1.7;margin-top:12px}.notice{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}.ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}.warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412}.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button{border:0;color:#fff;border-radius:9px;padding:10px 14px;cursor:pointer;font-size:14px}.primary{background:#2563eb}.secondary{background:#6b7280}.danger{background:#dc2626}table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}th{background:#f3f4f6}.metric{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}.metric div{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px}.metric span{font-size:12px;color:#64748b}.metric strong{display:block;margin-top:6px;font-size:20px}.small{font-size:12px;color:#64748b}@media(max-width:800px){.grid,.metric{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>Shopee利润核算工具 · 数据管理</h1><div class="sub">上传 Excel，自动生成网站使用的 SKU 成本 JSON 和仓储费用 JSON。</div><div style="position:absolute;right:28px;top:17px"><a href="./index.html" style="color:#fff;text-decoration:none;border:1px solid #64748b;padding:8px 12px;border-radius:9px;font-size:13px">返回利润核算</a></div></header>
+<main>
+<div class="card">
+<h2>使用说明</h2>
+<div class="notice">此工具在浏览器中处理 Excel，不会把文件上传到服务器。点击“应用到本浏览器”只能供当前电脑临时测试；要让所有人看到更新，需下载生成的两个 JSON 文件，并替换 GitHub 仓库中 <b>data/sku-cost.json</b> 和 <b>data/warehouse-fee.json</b>。</div>
+</div>
+<div class="grid">
+<div class="card upload"><label>1. SKU 成本与状态表</label><input id="costFile" type="file" accept=".xlsx,.xls" onchange="readCostFile(this.files[0])"><div class="small">支持字段：组合SKU、品名、产品1-4、数量1-4、sku数量、印尼产品状态、印尼-组合SKU总成本、越南产品状态、越南-组合SKU总成本。</div><div id="costStatus" class="warn">尚未导入</div></div>
+<div class="card upload"><label>2. 印尼仓储费用明细表</label><input id="warehouseFile" type="file" accept=".xlsx,.xls" onchange="readWarehouseFile(this.files[0])"><div class="small">支持字段：仓库SKU、仓库SKU产品名称、包装尺寸长宽高、CBM体积、单件仓储费。</div><div id="warehouseStatus" class="warn">尚未导入</div></div>
+</div>
+<div class="card">
+<h2>转换结果</h2>
+<div class="metric"><div><span>SKU 记录</span><strong id="skuCount">0</strong></div><div><span>仓储费记录</span><strong id="warehouseCount">0</strong></div><div><span>组合 SKU</span><strong id="comboCount">0</strong></div><div><span>校验警告</span><strong id="warningCount">0</strong></div></div>
+<div id="resultBox" class="notice">请先上传两个 Excel 文件。</div>
+<div class="btns"><button class="primary" onclick="downloadJson('sku')">下载 sku-cost.json</button><button class="primary" onclick="downloadJson('warehouse')">下载 warehouse-fee.json</button><button class="secondary" onclick="applyLocal()">应用到本浏览器测试</button><button class="danger" onclick="clearLocal()">清除本浏览器临时数据</button></div>
+</div>
+<div class="card"><h2>数据预览</h2><div style="overflow:auto"><table><thead><tr><th>SKU</th><th>产品名称</th><th>SKU数量</th><th>印尼成本</th><th>越南成本</th><th>组成</th></tr></thead><tbody id="preview"></tbody></table></div></div>
+</main>
+<script>
+let skuData=null, warehouseData=null, warnings=[];
+function norm(s){return String(s==null?'':s).trim()}
+function num(v){const n=Number(String(v==null?'':v).replace(/,/g,''));return Number.isFinite(n)?n:0}
+function headerMap(headers){const m={};headers.forEach((h,i)=>m[norm(h).toLowerCase()]=i);return m}
+function get(row,map,names){for(const name of names){const i=map[name.toLowerCase()];if(i!==undefined)return row[i]}return undefined}
+function readWorkbook(file,cb){if(!file)return;const reader=new FileReader();reader.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});cb(rows)}catch(err){alert('读取 Excel 失败：'+err.message)}};reader.readAsArrayBuffer(file)}
+function readCostFile(file){readWorkbook(file,rows=>{warnings=[];if(rows.length<2)throw new Error('成本表没有数据');const map=headerMap(rows[0]);const out={};for(const row of rows.slice(1)){const sku=norm(get(row,map,['组合sku','sku']));if(!sku)continue;const comps=[];for(let i=1;i<=4;i++){const cs=norm(get(row,map,['产品'+i]));const q=num(get(row,map,['数量'+i]));if(cs&&q>0)comps.push({sku:cs,qty:q})}let qty=num(get(row,map,['sku数量','sku数量合计']));if(!qty)qty=comps.reduce((s,c)=>s+c.qty,0);out[sku]={sku,name:norm(get(row,map,['品名','产品名称'])),components:comps,skuQty:qty,ID:{status:norm(get(row,map,['印尼产品状态'])),costRmb:num(get(row,map,['印尼-组合sku总成本','印尼组合sku总成本','印尼成本']))},VN:{status:norm(get(row,map,['越南产品状态'])),costRmb:num(get(row,map,['越南-组合sku总成本','越南组合sku总成本','越南成本']))}};if(!comps.length)warnings.push(sku+' 未找到组成 SKU')}skuData=out;document.getElementById('costStatus').className='ok';document.getElementById('costStatus').textContent='导入成功：'+Object.keys(out).length+' 条';refresh()})}
+function readWarehouseFile(file){readWorkbook(file,rows=>{if(rows.length<2)throw new Error('仓储表没有数据');const map=headerMap(rows[0]);const out={};for(const row of rows.slice(1)){const sku=norm(get(row,map,['仓库sku','sku']));if(!sku)continue;out[sku]={name:norm(get(row,map,['仓库sku产品名称','产品名称','品名'])),length:num(get(row,map,['包装尺寸-长（cm）','包装尺寸-长(cm)','长'])),width:num(get(row,map,['包装尺寸-宽（cm）','包装尺寸-宽(cm)','宽'])),height:num(get(row,map,['包装尺寸-高（cm）','包装尺寸-高(cm)','高'])),cbm:num(get(row,map,['cbm体积','cbm'])),storageFee:num(get(row,map,['单件仓储费','仓储费']))}}warehouseData=out;document.getElementById('warehouseStatus').className='ok';document.getElementById('warehouseStatus').textContent='导入成功：'+Object.keys(out).length+' 条';refresh()})}
+function refresh(){const skus=skuData?Object.values(skuData):[];document.getElementById('skuCount').textContent=skus.length;document.getElementById('warehouseCount').textContent=warehouseData?Object.keys(warehouseData).length:0;document.getElementById('comboCount').textContent=skus.filter(x=>(x.components||[]).length>1||Number(x.skuQty)>1).length;document.getElementById('warningCount').textContent=warnings.length;document.getElementById('resultBox').className=skuData&&warehouseData?'ok':'notice';document.getElementById('resultBox').textContent=skuData&&warehouseData?'两个文件均已转换完成，可以下载 JSON 或应用到本浏览器测试。':'请继续上传缺少的 Excel 文件。';document.getElementById('preview').innerHTML=skus.slice(0,20).map(x=>`<tr><td>${x.sku}</td><td>${x.name}</td><td>${x.skuQty}</td><td>${x.ID.costRmb}</td><td>${x.VN.costRmb}</td><td>${(x.components||[]).map(c=>c.sku+'×'+c.qty).join('；')}</td></tr>`).join('')}
+function saveFile(name,obj){if(!obj){alert('请先导入对应的 Excel 文件');return}const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href)}
+function downloadJson(type){if(type==='sku')saveFile('sku-cost.json',skuData);else saveFile('warehouse-fee.json',warehouseData)}
+function applyLocal(){if(!skuData||!warehouseData){alert('请先导入两个 Excel 文件');return}localStorage.setItem('shopeeSkuLibraryOverride',JSON.stringify(skuData));localStorage.setItem('shopeeWarehouseLibraryOverride',JSON.stringify(warehouseData));alert('已应用到本浏览器。返回利润核算页面即可测试。此操作不会同步给其他人。')}
+function clearLocal(){localStorage.removeItem('shopeeSkuLibraryOverride');localStorage.removeItem('shopeeWarehouseLibraryOverride');alert('已清除本浏览器临时数据。')}
+</script>
+</body></html>
