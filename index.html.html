@@ -2,19 +2,19 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Shopee利润核算工具</title>
+<title>Shopee 多站点利润模拟器 V6.2（数据文件分离版）</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",Arial,sans-serif;background:#eef2f7;color:#111827}header{background:#111827;color:#fff;padding:18px 28px}header h1{margin:0;font-size:22px}.sub{color:#cbd5e1;font-size:13px;margin-top:6px;line-height:1.5}main{padding:22px;max-width:1740px;margin:auto}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}.metric,.card{background:#fff;border-radius:14px;box-shadow:0 8px 22px rgba(15,23,42,.08)}.metric{padding:16px}.metric span{color:#6b7280;font-size:13px}.metric strong{display:block;margin-top:8px;font-size:21px}.layout{display:grid;grid-template-columns:460px 1fr;gap:18px;align-items:start}.card{padding:18px;margin-bottom:18px}.card h2{margin:0 0 14px;font-size:17px;display:flex;justify-content:space-between}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}label{display:block;font-size:13px;color:#4b5563;margin-bottom:5px}input,select,textarea{width:100%;padding:9px 10px;border:1px solid #d1d5db;border-radius:9px;font-size:14px;background:#fff}input:focus,select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}.tabs button{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:10px;padding:10px 6px;cursor:pointer}.tabs button.active{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:700}.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button.primary,button.secondary,button.danger{border:0;color:#fff;border-radius:9px;padding:10px 14px;cursor:pointer}button.primary{background:#2563eb}button.secondary{background:#6b7280}button.danger{background:#dc2626}.section{margin:18px 0 10px;font-size:14px;font-weight:800;border-left:4px solid #2563eb;padding-left:8px}.pill{padding:3px 8px;border-radius:999px;background:#f3f4f6;color:#374151;font-size:12px}.notice,.ok,.warnbox{padding:11px 12px;border-radius:10px;font-size:13px;line-height:1.7;margin-top:10px}.notice{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}.warnbox{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}.suggestion{border-radius:14px;padding:18px;background:#f9fafb;border:1px solid #e5e7eb}.big{font-size:30px;margin:8px 0;font-weight:900}.step{display:grid;grid-template-columns:190px 1fr 150px;gap:12px;padding:9px 0;border-bottom:1px solid #e5e7eb;align-items:center;font-size:14px}.step .calc{color:#6b7280;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}.step .value{text-align:right;font-weight:700}.good{color:#059669!important;font-weight:800}.warn{color:#d97706!important;font-weight:800}.bad{color:#dc2626!important;font-weight:800}.blue{color:#2563eb!important;font-weight:800}.small{font-size:12px;color:#6b7280;margin-top:4px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:center;white-space:nowrap}th{background:#f3f4f6}.table-wrap{overflow-x:auto}details{margin-top:18px;border:1px dashed #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc}summary{cursor:pointer;font-weight:800}#siteSelect{font-weight:700;border:1px solid #93c5fd;background:#eff6ff;color:#1e3a8a}@media(max-width:1180px){.layout{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.step{grid-template-columns:1fr}.step .value{text-align:left}}
 </style>
 </head>
 <body>
-<header><h1>Shopee利润核算工具</h1><div class="sub">支持印尼与越南站点，自动匹配不同成本、产品状态、店铺费率和海外仓规则。成本与仓储数据采用独立 JSON 文件维护。</div><div style="position:absolute;right:28px;top:17px"><a href="./data-manager.html" style="color:#fff;text-decoration:none;border:1px solid #64748b;padding:8px 12px;border-radius:9px;font-size:13px">数据管理</a></div></header>
+<header><h1>Shopee 多站点利润模拟器 V6.2（数据文件分离版）</h1><div class="sub">同一套 SKU 自动匹配印尼/越南不同成本与状态；切换站点后自动切换店铺、币种、费率和海外仓规则。</div></header>
 <main>
 <div class="metrics">
 <div class="metric"><span>实际售价</span><strong id="mPrice">-</strong></div><div class="metric"><span>总支出</span><strong id="mTotal">-</strong></div><div class="metric"><span>毛利</span><strong id="mProfit">-</strong></div><div class="metric"><span>毛利率</span><strong id="mRate">0%</strong></div><div class="metric"><span>判断结果</span><strong id="mStatus">待计算</strong></div>
 </div>
 <div class="layout">
-<section><div class="card"><h2>输入参数 <span><span class="pill" id="dataSource">数据源：网站 JSON</span> <span class="pill" id="libCount"></span></span></h2>
+<section><div class="card"><h2>输入参数 <span class="pill" id="libCount"></span></h2>
 <div class="full" style="margin-bottom:14px;">
 <label>站点选择</label>
 <select id="siteSelect" onchange="setSite(this.value)">
@@ -37,13 +37,7 @@
 </div>
 <div id="skuMatch" class="warnbox">尚未匹配 SKU，可手动输入成本和海外仓费用。</div>
 <div class="section">固定费率参数</div><div class="notice" style="margin-bottom:10px;">切换站点或店铺后，以下参数会自动加载；所有参数仍可手动修改。</div><div id="feeInputs" class="grid" style="padding:12px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;"></div>
-<details><summary>高级配置：海外仓规则与数据管理</summary>
-<div id="warehouseRules" style="margin-top:12px"></div>
-<div class="notice" style="margin-top:12px;">
-  成本表或仓储费用表更新时，可使用数据管理工具将 Excel 转换为网站使用的 JSON 数据文件。
-  <div class="btns" style="margin-top:10px;"><a href="./data-manager.html" style="text-decoration:none"><button type="button" class="primary">打开数据管理工具</button></a></div>
-</div>
-</details>
+<details><summary>高级配置：海外仓规则</summary><div id="warehouseRules" style="margin-top:12px"></div></details>
 <div class="btns"><button class="primary" onclick="saveRecord()">保存记录</button><button class="secondary" onclick="resetForm()">重置参数</button><button class="secondary" onclick="exportCSV()">导出CSV</button><button class="danger" onclick="clearRecords()">清空记录</button></div>
 <div id="formulaNote" class="notice"></div>
 </div></section>
@@ -56,34 +50,22 @@
 <script>
 let SKU_LIBRARY={};
 let ID_STORAGE={};
-let site='ID',mode='forward',warehouseManual=false;
-let records=JSON.parse(localStorage.getItem('shopeeProfitToolRecords')||'[]');
+'ID',mode='forward',warehouseManual=false;
+let records=JSON.parse(localStorage.getItem('shopeeMultiSiteV6_2Records')||'[]');
 const CONFIG={
 ID:{name:'印尼',currency:'RP',shops:['ID01','ID02','ID03','ID04','ID05','ID06','ID07','ID08','ID09','ID10'],defaultRate:3873},
 VN:{name:'越南',currency:'VND',shops:['VN01','VN03','VN04','VN05','VN06','VN07'],defaultRate:0}
 };
 function n(id){return Number(document.getElementById(id).value||0)}function v(id){return document.getElementById(id).value||''}function money(x){return CONFIG[site].currency+Math.round(Number(x||0)).toLocaleString()}function rmb(x){return '¥'+Number(x||0).toFixed(2)}function pct(x){return(Number(x||0)*100).toFixed(2)+'%'}
 async function loadData(){
-  const localSku=localStorage.getItem('shopeeSkuLibraryOverride');
-  const localWarehouse=localStorage.getItem('shopeeWarehouseLibraryOverride');
-  if(localSku && localWarehouse){
-    SKU_LIBRARY=JSON.parse(localSku);
-    ID_STORAGE=JSON.parse(localWarehouse);
-    const src=document.getElementById('dataSource');
-    if(src) src.textContent='数据源：本浏览器临时导入';
-    return;
-  }
-  const stamp=Date.now();
   const [skuRes, storageRes] = await Promise.all([
-    fetch('./data/sku-cost.json?v='+stamp, {cache:'no-store'}),
-    fetch('./data/warehouse-fee.json?v='+stamp, {cache:'no-store'})
+    fetch('./data/sku-cost.json', {cache:'no-store'}),
+    fetch('./data/warehouse-fee.json', {cache:'no-store'})
   ]);
   if(!skuRes.ok) throw new Error('SKU成本数据加载失败：'+skuRes.status);
   if(!storageRes.ok) throw new Error('海外仓费用数据加载失败：'+storageRes.status);
   SKU_LIBRARY = await skuRes.json();
   ID_STORAGE = await storageRes.json();
-  const src=document.getElementById('dataSource');
-  if(src) src.textContent='数据源：网站 JSON';
 }
 async function init(){
   try{
@@ -135,10 +117,10 @@ function calcTargetPrice(){const cost=n('costRmb'),target=n('targetRate')/100;le
 function calculate(){const r=mode==='targetCost'?calcTargetCost():mode==='targetPrice'?calcTargetPrice():calcForward(),status=r.rate<0?'亏损':r.rate<0.14?'低毛利':'盈利',cls=status==='盈利'?'good':status==='低毛利'?'warn':'bad';document.getElementById('mPrice').textContent=money(r.price);document.getElementById('mTotal').textContent=money(r.total);document.getElementById('mProfit').textContent=money(r.profit);document.getElementById('mRate').textContent=pct(r.rate);document.getElementById('mStatus').textContent=status;['mProfit','mRate','mStatus'].forEach(id=>document.getElementById(id).className=cls);updateSuggestion({...r,status});updateSteps(r);return{...r,status}}
 function updateSuggestion(r){const t=document.getElementById('suggestionTitle'),m=document.getElementById('suggestionMain'),x=document.getElementById('suggestionText');if(mode==='forward'){t.textContent='当前模式：正向算利润';m.textContent='毛利率 '+pct(r.rate);m.className='big '+(r.status==='盈利'?'good':r.status==='低毛利'?'warn':'bad');x.textContent='选择 SKU 自动带出当前站点成本及海外仓费用，实际售价手动输入。'}else if(mode==='targetCost'){t.textContent='当前模式：固定利润率求最高成本';m.textContent=rmb(r.maxCost);m.className='big '+(r.maxCost<0?'bad':'blue');x.textContent=r.maxCost<0?'即使成本为0也无法达到目标利润率。':'当前费用结构下允许的最高产品成本。'}else{t.textContent='当前模式：固定利润率求建议售价';m.textContent=money(r.suggested);m.className='big blue';x.textContent='根据当前站点规则、成本、海外仓费用和目标利润率反推。'}}
 function updateSteps(r){let rows=[['实际售价','手动输入/反向计算',money(r.price)],['产品成本',`${rmb(r.cost)} × 汇率 ${n('exchangeRate')}`,money(r.costLocal)],['海外仓费用','按站点和店铺规则',money(r.warehouse)],['平台佣金',`售价 × ${n('commissionRate')}%`,money(r.commission)]];if(site==='ID'){rows.push(['运费服务费',`售价 × ${n('shippingRate')}%`,money(r.shipping)],['返现服务费',`售价 × ${n('cashbackRate')}%`,money(r.cashback)],['订单处理费','固定输入',money(r.order)],['尾款手续费',`尾款基数 × ${n('finalRate')}%`,money(r.final)])}else{rows.push(['运费服务费',`售价 × ${n('shippingRate')}% + ${n('shippingFixed')}`,money(r.shipping)],['退货费用',`售价 × ${n('returnRate')}%`,money(r.returnFee)],['支付手续费',`售价 × ${n('paymentRate')}%`,money(r.payment)])}rows.push(['税费',`售价 × ${n('taxRate')}%`,money(r.tax)],['汇率折损',`售价 × ${n('lossRate')}%`,money(r.loss)],['总支出','全部费用合计',money(r.total)],['毛利','售价 - 总支出',money(r.profit)],['毛利率','毛利 ÷ 售价',pct(r.rate)]);document.getElementById('steps').innerHTML=rows.map(a=>`<div class="step"><div>${a[0]}</div><div class="calc">${a[1]}</div><div class="value">${a[2]}</div></div>`).join('')}
-function saveRecord(){const r=calculate();records.push({site:CONFIG[site].name,mode,shop:v('shop'),sku:v('sku'),price:r.price,cost:r.cost,warehouse:r.warehouse,total:r.total,rate:r.rate,status:r.status});localStorage.setItem('shopeeProfitToolRecords',JSON.stringify(records));renderRecords()}
-function renderRecords(){document.getElementById('recordBody').innerHTML=records.map((r,i)=>`<tr><td>${r.site}</td><td>${r.mode}</td><td>${r.shop}</td><td>${r.sku||'-'}</td><td>${Math.round(r.price).toLocaleString()}</td><td>${rmb(r.cost)}</td><td>${Math.round(r.warehouse).toLocaleString()}</td><td>${Math.round(r.total).toLocaleString()}</td><td>${pct(r.rate)}</td><td>${r.status}</td><td><button class="danger" onclick="records.splice(${i},1);localStorage.setItem('shopeeProfitToolRecords',JSON.stringify(records));renderRecords()">删除</button></td></tr>`).join('')}
-function clearRecords(){if(confirm('确定清空历史记录吗？')){records=[];localStorage.removeItem('shopeeProfitToolRecords');renderRecords()}}
+function saveRecord(){const r=calculate();records.push({site:CONFIG[site].name,mode,shop:v('shop'),sku:v('sku'),price:r.price,cost:r.cost,warehouse:r.warehouse,total:r.total,rate:r.rate,status:r.status});localStorage.setItem('shopeeMultiSiteV6_2Records',JSON.stringify(records));renderRecords()}
+function renderRecords(){document.getElementById('recordBody').innerHTML=records.map((r,i)=>`<tr><td>${r.site}</td><td>${r.mode}</td><td>${r.shop}</td><td>${r.sku||'-'}</td><td>${Math.round(r.price).toLocaleString()}</td><td>${rmb(r.cost)}</td><td>${Math.round(r.warehouse).toLocaleString()}</td><td>${Math.round(r.total).toLocaleString()}</td><td>${pct(r.rate)}</td><td>${r.status}</td><td><button class="danger" onclick="records.splice(${i},1);localStorage.setItem('shopeeMultiSiteV6_2Records',JSON.stringify(records));renderRecords()">删除</button></td></tr>`).join('')}
+function clearRecords(){if(confirm('确定清空历史记录吗？')){records=[];localStorage.removeItem('shopeeMultiSiteV6_2Records');renderRecords()}}
 function resetForm(){document.getElementById('sku').value='';document.getElementById('productName').value='';document.getElementById('skuQtyDisplay').value=0;document.getElementById('costRmb').value=0;document.getElementById('price').value=site==='ID'?49000:0;document.getElementById('exchangeRate').value=CONFIG[site].defaultRate;document.getElementById('warehouse').value=0;warehouseManual=false;applyRules();calculate()}
-function exportCSV(){const h=['站点','模式','店铺','SKU','售价','成本RMB','海外仓','总支出','毛利率','状态'],rows=records.map(r=>[r.site,r.mode,r.shop,r.sku,r.price,r.cost,r.warehouse,r.total,pct(r.rate),r.status]),csv=[h,...rows].map(a=>a.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n'),b=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Shopee利润核算记录.csv';a.click()}
+function exportCSV(){const h=['站点','模式','店铺','SKU','售价','成本RMB','海外仓','总支出','毛利率','状态'],rows=records.map(r=>[r.site,r.mode,r.shop,r.sku,r.price,r.cost,r.warehouse,r.total,pct(r.rate),r.status]),csv=[h,...rows].map(a=>a.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n'),b=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Shopee多站点利润记录.csv';a.click()}
 setMode('forward');init();
 </script></body></html>
